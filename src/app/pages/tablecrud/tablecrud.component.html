@@ -1,0 +1,133 @@
+
+<div>
+  <h4>实现的功能：</h4>
+  <p>1. 实现增删改功能，新增行保存时验证名称为必填项，否则保存不成功</p>
+  <p>2. 循环构建表格列头，动态设置列宽、中文以及是否可见</p>
+  <p>3. 在表格尾追加汇总栏</p>
+  <p>4. 实现下拉单选、下拉多选、日期选择</p>
+</div>
+<p>
+<button nz-button nzType="primary" (click)="addNewRow($event)"><i nz-icon nzType="plus" nzTheme="outline"></i>新增</button>&nbsp;
+<button nz-button nzType="primary" (click)="printList($event)"><i nz-icon nzType="printer" nzTheme="outline"></i>打印List</button>
+</p>
+<nz-table #editRowTable nzBordered [nzData]="listOfData">
+    <thead>
+      <tr>
+        <!-- <th nzWidth="5%">序号</th>
+        <th nzWidth="15%">Name</th>
+        <th nzWidth="10%">Age</th>
+        <th nzWidth="10%">Address</th>
+        <th nzWidth="25%">Category</th>
+        <th nzWidth="15%">Date</th>   
+          [ngStyle]="{'visibility':item.visibility}"
+          [ngStyle]="{'display':item.display}"
+        -->
+        <th nzWidth="7%">序号</th>
+        
+        <th *ngFor="let item of cols" nzWidth="{{ item.width }}" nzAlign="{{ item.alignCaption }}"
+          [ngStyle]="{'display':item.display}">
+          {{ item.caption }}
+        </th>
+
+        <th nzWidth="30px">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+        <!-- 数据行 -->
+      <tr *ngFor="let data of editRowTable.data; let index = index">
+        <td>{{ index + 1 }}</td>
+        <td [ngStyle]="{'display':cols[0].display}">{{ data.id }}</td>
+        <!-- <td [ngStyle]="{'display':cols[2].display}" nzWidth="cols[2].width" nzAlign="cols[2].alignCaption"> -->
+        <td>
+          <ng-container *ngIf="!editCache[data.id].edit; else nameInputTpl">
+            {{ data.name }}
+          </ng-container>
+          <ng-template #nameInputTpl style="width: 100%">
+            <input #ctlName type="text" nz-input [(ngModel)]="editCache[data.id].data.name" />
+          </ng-template>
+        </td>
+
+        
+        <!-- <td [ngStyle]="{'display':cols[3].display}" nzWidth="cols[3].width" nzAlign="cols[3].alignCaption"> -->
+        <td>
+          <ng-container *ngIf="!editCache[data.id].edit; else ageInputTpl">
+            {{ data.age }}
+          </ng-container>
+          <ng-template #ageInputTpl style="width: 100%">
+            <!-- <input type="text" nz-input [(ngModel)]="editCache[data.id].data.age" /> -->
+            <nz-input-number [(ngModel)]="editCache[data.id].data.age" [nzMin]="1" [nzMax]="999999999" [nzStep]="1"></nz-input-number>
+          </ng-template>
+        </td>
+
+        
+        <!-- <td [ngStyle]="{'display':cols[4].display}" nzWidth="cols[4].width" nzAlign="cols[4].alignCaption"> -->
+        <td>
+          <ng-container *ngIf="!editCache[data.id].edit; else addressInputTpl">
+            {{ data.address }}
+          </ng-container>
+          <ng-template #addressInputTpl>
+            <nz-select style="width:100%" [(ngModel)]="editCache[data.id].data.address" nzAllowClear nzPlaceHolder="选择国家">
+                <nz-option *ngFor = "let item of countries" nzValue="{{item.sid}}" nzLabel="{{item.name}}"></nz-option>
+            </nz-select>
+          </ng-template>
+        </td>
+
+        
+        <!-- <td [ngStyle]="{'display':cols[5].display}" nzWidth="cols[5].width" nzAlign="cols[5].alignCaption"> -->
+        <td>
+            <ng-container *ngIf="!editCache[data.id].edit; else categoryInputTpl">
+                {{ data.category }}
+            </ng-container>
+            <ng-template #categoryInputTpl style="width: 100%">
+
+                <nz-select
+                [nzMaxTagCount]="2"
+                [nzMaxTagPlaceholder]="tagPlaceHolder"
+                style="width: 100%"
+                nzMode="multiple"
+                nzPlaceHolder="Please select"
+                [(ngModel)]="editCache[data.id].data.category"
+                >
+                <nz-option *ngFor="let option of categories" [nzLabel]="option.name" [nzValue]="option.sid"></nz-option>
+                </nz-select>
+                <ng-template #tagPlaceHolder let-selectedList> {{ selectedList.length }}... </ng-template>
+                
+            </ng-template>
+        </td>
+
+
+        <!-- <td [ngStyle]="{'display':cols[5].display}" nzWidth="cols[5].width" nzAlign="cols[5].alignCaption">  -->
+        <td>
+            <ng-container *ngIf="!editCache[data.id].edit; else dateInputTpl">
+                {{ data.date | date: 'yyyy-MM-dd' }}
+            </ng-container>
+            <ng-template #dateInputTpl style="width: 100%">
+                <nz-date-picker [(ngModel)]="editCache[data.id].data.date"></nz-date-picker>
+            </ng-template>
+        </td>
+        
+
+
+        <td>
+          <div class="editable-row-operations">
+            <ng-container *ngIf="!editCache[data.id].edit; else saveTpl">
+              <a (click)="startEdit(data.id)">修改</a>
+              &nbsp;
+              <a nz-popconfirm nzTitle="确定要删除么?" (nzOnConfirm)="deleteRow(data.id)">删除</a>
+            </ng-container>
+            <ng-template #saveTpl>
+              <a (click)="saveEdit(data.id)">保存</a>
+              &nbsp;
+              <a nz-popconfirm nzTitle="确定要取消修改么?" (nzOnConfirm)="cancelEdit(data.id)">取消</a>
+            </ng-template>
+          </div>
+        </td>
+
+
+      </tr>
+
+      <tr *ngIf="listOfData.length>0">
+          <td>汇总</td><td></td><td>106</td><td></td><td></td><td></td><td></td>
+      </tr>
+    </tbody>
+  </nz-table>
